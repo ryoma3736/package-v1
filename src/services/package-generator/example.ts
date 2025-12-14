@@ -192,7 +192,7 @@ async function errorHandlingExample() {
       apiKey: process.env.ANTHROPIC_API_KEY!,
     });
 
-    const result = await generatePackageDesigns({
+    const _result = await generatePackageDesigns({
       productAnalysis,
       templateType: 'box-standard',
       provider: 'openai',
@@ -200,7 +200,7 @@ async function errorHandlingExample() {
       variationCount: 2,
     });
 
-    console.log('予期しない成功');
+    console.log('予期しない成功:', _result);
   } catch (error) {
     console.log('エラーをキャッチしました:');
     console.log(`- メッセージ: ${(error as Error).message}`);

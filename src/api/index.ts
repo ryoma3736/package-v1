@@ -46,6 +46,140 @@ import {
 } from './jobs/queue.js';
 import { processJob, getProcessingCount } from './jobs/processor.js';
 
+/**
+ * API入力バリデーションエラー
+ */
+export class APIValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly field: string,
+    public readonly details?: unknown
+  ) {
+    super(message);
+    this.name = 'APIValidationError';
+  }
+}
+
+/**
+ * 入力バリデーションユーティリティ
+ */
+function validateImageBuffer(buffer: unknown): void {
+  if (!buffer || !(buffer instanceof Buffer)) {
+    throw new APIValidationError(
+      '画像データが不正です。Bufferを指定してください。',
+      'imageBuffer',
+      { receivedType: typeof buffer }
+    );
+  }
+
+  if (buffer.length === 0) {
+    throw new APIValidationError(
+      '画像データが空です。',
+      'imageBuffer'
+    );
+  }
+
+  // 最大サイズチェック（10MB）
+  const maxSize = 10 * 1024 * 1024;
+  if (buffer.length > maxSize) {
+    throw new APIValidationError(
+      `画像サイズが大きすぎます。最大${maxSize / 1024 / 1024}MBまで対応しています。`,
+      'imageBuffer',
+      { size: buffer.length, maxSize }
+    );
+  }
+
+  // 画像フォーマットチェック（マジックバイト）
+  const jpegMagic = buffer.slice(0, 2).toString('hex') === 'ffd8';
+  const pngMagic = buffer.slice(0, 8).toString('hex') === '89504e470d0a1a0a';
+  const webpMagic = buffer.slice(0, 4).toString('ascii') === 'RIFF' &&
+                    buffer.slice(8, 12).toString('ascii') === 'WEBP';
+
+  if (!jpegMagic && !pngMagic && !webpMagic) {
+    throw new APIValidationError(
+      '対応していない画像フォーマットです。JPEG、PNG、WebPのみ対応しています。',
+      'imageBuffer',
+      { detectedMagic: buffer.slice(0, 4).toString('hex') }
+    );
+  }
+}
+
+function validateGenerateOptions(options: GenerateOptions): void {
+  // ブランド名のバリデーション
+  if (options.brandName !== undefined) {
+    if (typeof options.brandName !== 'string') {
+      throw new APIValidationError(
+        'ブランド名は文字列で指定してください。',
+        'brandName',
+        { receivedType: typeof options.brandName }
+      );
+    }
+    if (options.brandName.length > 100) {
+      throw new APIValidationError(
+        'ブランド名は100文字以内で指定してください。',
+        'brandName',
+        { length: options.brandName.length }
+      );
+    }
+  }
+
+  // 商品名のバリデーション
+  if (options.productName !== undefined) {
+    if (typeof options.productName !== 'string') {
+      throw new APIValidationError(
+        '商品名は文字列で指定してください。',
+        'productName',
+        { receivedType: typeof options.productName }
+      );
+    }
+    if (options.productName.length > 200) {
+      throw new APIValidationError(
+        '商品名は200文字以内で指定してください。',
+        'productName',
+        { length: options.productName.length }
+      );
+    }
+  }
+
+  // バリエーション数のバリデーション
+  if (options.packageVariations !== undefined) {
+    if (typeof options.packageVariations !== 'number' || !Number.isInteger(options.packageVariations)) {
+      throw new APIValidationError(
+        'バリエーション数は整数で指定してください。',
+        'packageVariations',
+        { receivedType: typeof options.packageVariations }
+      );
+    }
+    if (options.packageVariations < 1 || options.packageVariations > 10) {
+      throw new APIValidationError(
+        'バリエーション数は1〜10の範囲で指定してください。',
+        'packageVariations',
+        { value: options.packageVariations }
+      );
+    }
+  }
+}
+
+function validateApiKeys(config: APIConfig, options: GenerateOptions): void {
+  // 画像分析は常に必要なのでClaude APIキーが必要
+  if (!config.claudeApiKey) {
+    throw new APIValidationError(
+      'Claude APIキーが設定されていません。画像分析にはAPIキーが必要です。',
+      'claudeApiKey'
+    );
+  }
+
+  // パッケージ/広告生成が必要な場合はOpenAI APIキーが必要
+  if (options.skipPackages !== true || options.skipAds !== true) {
+    if (!config.openaiApiKey) {
+      throw new APIValidationError(
+        'OpenAI APIキーが設定されていません。画像生成にはAPIキーが必要です。',
+        'openaiApiKey'
+      );
+    }
+  }
+}
+
 export interface APIConfig {
   claudeApiKey?: string;
   openaiApiKey?: string;
@@ -86,10 +220,19 @@ export class ProductGenerationAPI {
     imageBuffer: Buffer,
     options: GenerateOptions = {}
   ): Promise<GenerateResponse> {
+    // 入力バリデーション
+    validateImageBuffer(imageBuffer);
+    validateGenerateOptions(options);
+    validateApiKeys(this.config, options);
+
     // 同時実行数をチェック
     const maxConcurrent = this.config.maxConcurrentJobs || 5;
     if (getProcessingCount() >= maxConcurrent) {
-      throw new Error('Maximum concurrent jobs reached. Please try again later.');
+      throw new APIValidationError(
+        `同時実行数の上限（${maxConcurrent}）に達しています。しばらく待ってから再度お試しください。`,
+        'concurrentJobs',
+        { current: getProcessingCount(), max: maxConcurrent }
+      );
     }
 
     // ジョブを作成

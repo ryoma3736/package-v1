@@ -16,7 +16,7 @@ import type {
 } from './types.js';
 import { getPlatformConfig } from './platform-configs.js';
 import { applyTextOverlay, TEXT_OVERLAY_PRESETS } from './text-overlay.js';
-import { applyLayout, suggestBackgroundColor } from './layout-engine.js';
+import { applyLayout } from './layout-engine.js';
 
 /**
  * 広告生成サービス
@@ -180,7 +180,7 @@ export class AdGeneratorService {
    * プロンプトを構築
    */
   private buildPrompt(options: PromptGenerationOptions): string {
-    const { productAnalysis, platform, headline, description, style } = options;
+    const { productAnalysis, platform, headline: _headline, description, style } = options;
 
     const platformConfig = getPlatformConfig(platform);
 

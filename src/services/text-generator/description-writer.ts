@@ -6,8 +6,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import type {
   PromptContext,
   DescriptionOptions,
-  TextGenerationError,
 } from './types.js';
+import { TextGenerationError } from './types.js';
 import { buildDescriptionPrompt } from './prompts/description.js';
 
 /**
@@ -61,7 +61,11 @@ export async function generateDescription(
     // レスポンスからテキストを抽出
     const content = response.content[0];
     if (content.type !== 'text') {
-      throw new Error('Unexpected response type');
+      throw new TextGenerationError(
+        'APIレスポンスの形式が想定外です（テキスト以外の形式）',
+        'API_ERROR',
+        { responseType: content.type }
+      );
     }
 
     const text = content.text;
@@ -74,7 +78,11 @@ export async function generateDescription(
         const parsed = JSON.parse(text);
         return validateDescriptionResult(parsed);
       } catch {
-        throw new Error('Failed to parse response as JSON');
+        throw new TextGenerationError(
+          'AIレスポンスをJSONとして解析できませんでした',
+          'API_ERROR',
+          { rawResponse: text.substring(0, 200) }
+        );
       }
     }
 
@@ -83,45 +91,92 @@ export async function generateDescription(
 
     return validateDescriptionResult(parsed);
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        const timeoutError: Partial<TextGenerationError> = new Error(
-          'リクエストがタイムアウトしました'
-        );
-        timeoutError.name = 'TextGenerationError';
-        throw timeoutError;
-      }
+    if (error instanceof TextGenerationError) {
       throw error;
     }
-    throw new Error('Unknown error occurred during description generation');
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new TextGenerationError(
+          'リクエストがタイムアウトしました',
+          'TIMEOUT',
+          { originalError: error.message }
+        );
+      }
+      // API関連エラー
+      if (error.message.includes('API') || error.message.includes('401') || error.message.includes('403')) {
+        throw new TextGenerationError(
+          `API認証エラー: ${error.message}`,
+          'API_ERROR',
+          { originalError: error.message }
+        );
+      }
+      // ネットワークエラー
+      if (error.message.includes('network') || error.message.includes('ECONNREFUSED')) {
+        throw new TextGenerationError(
+          `ネットワークエラー: ${error.message}`,
+          'NETWORK_ERROR',
+          { originalError: error.message }
+        );
+      }
+      throw new TextGenerationError(
+        error.message,
+        'UNKNOWN',
+        { originalError: error.message }
+      );
+    }
+    throw new TextGenerationError(
+      '説明文生成中に不明なエラーが発生しました',
+      'UNKNOWN'
+    );
   }
 }
 
 /**
  * 説明文の結果を検証
  */
-function validateDescriptionResult(data: any): DescriptionResult {
+function validateDescriptionResult(data: unknown): DescriptionResult {
   if (!data || typeof data !== 'object') {
-    throw new Error('Invalid response format');
+    throw new TextGenerationError(
+      'APIレスポンスの形式が不正です',
+      'INVALID_INPUT',
+      { receivedData: typeof data }
+    );
   }
 
-  const { long, short, bullet_points } = data;
+  const obj = data as Record<string, unknown>;
+  const { long, short, bullet_points } = obj;
 
   if (typeof long !== 'string' || long.length === 0) {
-    throw new Error('Invalid or missing "long" field');
+    throw new TextGenerationError(
+      '長文説明（long）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'long', received: typeof long }
+    );
   }
 
   if (typeof short !== 'string' || short.length === 0) {
-    throw new Error('Invalid or missing "short" field');
+    throw new TextGenerationError(
+      '短文説明（short）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'short', received: typeof short }
+    );
   }
 
   if (!Array.isArray(bullet_points) || bullet_points.length === 0) {
-    throw new Error('Invalid or missing "bullet_points" field');
+    throw new TextGenerationError(
+      '箇条書きポイント（bullet_points）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'bullet_points', received: typeof bullet_points }
+    );
   }
 
   // 全ての箇条書きポイントが文字列であることを確認
   if (!bullet_points.every((point) => typeof point === 'string')) {
-    throw new Error('All bullet points must be strings');
+    throw new TextGenerationError(
+      '箇条書きポイントには文字列のみ指定できます',
+      'INVALID_INPUT',
+      { field: 'bullet_points' }
+    );
   }
 
   return {

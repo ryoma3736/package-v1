@@ -201,7 +201,7 @@ export function buildDesignPrompt(
   };
 
   // ベースプロンプトの構築
-  let basePrompt = replaceTemplateVariables(template.promptTemplate, variables);
+  const basePrompt = replaceTemplateVariables(template.promptTemplate, variables);
 
   // バリエーションスタイルの追加
   const styleSection = `

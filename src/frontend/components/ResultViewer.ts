@@ -6,10 +6,11 @@
 
 import type {
   JobResult,
-  PackageDesign,
-  AdResult,
   GeneratedTexts,
 } from '../types.js';
+
+// Types used in the component interface
+export type { PackageDesign, AdResult } from '../types.js';
 
 export interface ResultViewerProps {
   result: JobResult;
@@ -289,7 +290,7 @@ export function combineTextsForDownload(texts: GeneratedTexts): string {
   sections.push(texts.description.short);
   sections.push('');
   sections.push('【特徴】');
-  texts.description.bullet_points.forEach((point, i) => {
+  texts.description.bullet_points.forEach((point) => {
     sections.push(`・${point}`);
   });
   sections.push('');

@@ -6,8 +6,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import type {
   PromptContext,
   SEOOptions,
-  TextGenerationError,
 } from './types.js';
+import { TextGenerationError } from './types.js';
 import { buildSEOPrompt } from './prompts/seo.js';
 
 /**
@@ -61,7 +61,11 @@ export async function generateSEO(
     // レスポンスからテキストを抽出
     const content = response.content[0];
     if (content.type !== 'text') {
-      throw new Error('Unexpected response type');
+      throw new TextGenerationError(
+        'APIレスポンスの形式が想定外です（テキスト以外の形式）',
+        'API_ERROR',
+        { responseType: content.type }
+      );
     }
 
     const text = content.text;
@@ -74,7 +78,11 @@ export async function generateSEO(
         const parsed = JSON.parse(text);
         return validateSEOResult(parsed);
       } catch {
-        throw new Error('Failed to parse response as JSON');
+        throw new TextGenerationError(
+          'AIレスポンスをJSONとして解析できませんでした',
+          'API_ERROR',
+          { rawResponse: text.substring(0, 200) }
+        );
       }
     }
 
@@ -83,45 +91,90 @@ export async function generateSEO(
 
     return validateSEOResult(parsed);
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        const timeoutError: Partial<TextGenerationError> = new Error(
-          'リクエストがタイムアウトしました'
-        );
-        timeoutError.name = 'TextGenerationError';
-        throw timeoutError;
-      }
+    if (error instanceof TextGenerationError) {
       throw error;
     }
-    throw new Error('Unknown error occurred during SEO generation');
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new TextGenerationError(
+          'リクエストがタイムアウトしました',
+          'TIMEOUT',
+          { originalError: error.message }
+        );
+      }
+      if (error.message.includes('API') || error.message.includes('401') || error.message.includes('403')) {
+        throw new TextGenerationError(
+          `API認証エラー: ${error.message}`,
+          'API_ERROR',
+          { originalError: error.message }
+        );
+      }
+      if (error.message.includes('network') || error.message.includes('ECONNREFUSED')) {
+        throw new TextGenerationError(
+          `ネットワークエラー: ${error.message}`,
+          'NETWORK_ERROR',
+          { originalError: error.message }
+        );
+      }
+      throw new TextGenerationError(
+        error.message,
+        'UNKNOWN',
+        { originalError: error.message }
+      );
+    }
+    throw new TextGenerationError(
+      'SEOテキスト生成中に不明なエラーが発生しました',
+      'UNKNOWN'
+    );
   }
 }
 
 /**
  * SEO結果を検証
  */
-function validateSEOResult(data: any): SEOResult {
+function validateSEOResult(data: unknown): SEOResult {
   if (!data || typeof data !== 'object') {
-    throw new Error('Invalid response format');
+    throw new TextGenerationError(
+      'APIレスポンスの形式が不正です',
+      'INVALID_INPUT',
+      { receivedData: typeof data }
+    );
   }
 
-  const { title, description, keywords } = data;
+  const obj = data as Record<string, unknown>;
+  const { title, description, keywords } = obj;
 
   if (typeof title !== 'string' || title.length === 0) {
-    throw new Error('Invalid or missing "title" field');
+    throw new TextGenerationError(
+      'SEOタイトル（title）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'title', received: typeof title }
+    );
   }
 
   if (typeof description !== 'string' || description.length === 0) {
-    throw new Error('Invalid or missing "description" field');
+    throw new TextGenerationError(
+      'メタディスクリプション（description）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'description', received: typeof description }
+    );
   }
 
   if (!Array.isArray(keywords) || keywords.length === 0) {
-    throw new Error('Invalid or missing "keywords" field');
+    throw new TextGenerationError(
+      'キーワード（keywords）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'keywords', received: typeof keywords }
+    );
   }
 
   // 全てのキーワードが文字列であることを確認
   if (!keywords.every((keyword) => typeof keyword === 'string')) {
-    throw new Error('All keywords must be strings');
+    throw new TextGenerationError(
+      'キーワードには文字列のみ指定できます',
+      'INVALID_INPUT',
+      { field: 'keywords' }
+    );
   }
 
   return {

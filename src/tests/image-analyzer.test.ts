@@ -3,8 +3,6 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { promises as fs } from 'fs';
-import path from 'path';
 import sharp from 'sharp';
 import {
   analyzeProductImage,

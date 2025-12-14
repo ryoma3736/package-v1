@@ -2,7 +2,7 @@
  * ECテキスト生成エンジンのテスト
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type {
   GeneratedTexts,
   TextGenerationOptions,

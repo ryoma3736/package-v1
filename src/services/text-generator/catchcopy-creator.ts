@@ -6,8 +6,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import type {
   PromptContext,
   CatchcopyOptions,
-  TextGenerationError,
 } from './types.js';
+import { TextGenerationError } from './types.js';
 import { buildCatchcopyPrompt } from './prompts/catchcopy.js';
 
 /**
@@ -61,7 +61,11 @@ export async function generateCatchcopy(
     // レスポンスからテキストを抽出
     const content = response.content[0];
     if (content.type !== 'text') {
-      throw new Error('Unexpected response type');
+      throw new TextGenerationError(
+        'APIレスポンスの形式が想定外です（テキスト以外の形式）',
+        'API_ERROR',
+        { responseType: content.type }
+      );
     }
 
     const text = content.text;
@@ -74,7 +78,11 @@ export async function generateCatchcopy(
         const parsed = JSON.parse(text);
         return validateCatchcopyResult(parsed);
       } catch {
-        throw new Error('Failed to parse response as JSON');
+        throw new TextGenerationError(
+          'AIレスポンスをJSONとして解析できませんでした',
+          'API_ERROR',
+          { rawResponse: text.substring(0, 200) }
+        );
       }
     }
 
@@ -83,45 +91,90 @@ export async function generateCatchcopy(
 
     return validateCatchcopyResult(parsed);
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        const timeoutError: Partial<TextGenerationError> = new Error(
-          'リクエストがタイムアウトしました'
-        );
-        timeoutError.name = 'TextGenerationError';
-        throw timeoutError;
-      }
+    if (error instanceof TextGenerationError) {
       throw error;
     }
-    throw new Error('Unknown error occurred during catchcopy generation');
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new TextGenerationError(
+          'リクエストがタイムアウトしました',
+          'TIMEOUT',
+          { originalError: error.message }
+        );
+      }
+      if (error.message.includes('API') || error.message.includes('401') || error.message.includes('403')) {
+        throw new TextGenerationError(
+          `API認証エラー: ${error.message}`,
+          'API_ERROR',
+          { originalError: error.message }
+        );
+      }
+      if (error.message.includes('network') || error.message.includes('ECONNREFUSED')) {
+        throw new TextGenerationError(
+          `ネットワークエラー: ${error.message}`,
+          'NETWORK_ERROR',
+          { originalError: error.message }
+        );
+      }
+      throw new TextGenerationError(
+        error.message,
+        'UNKNOWN',
+        { originalError: error.message }
+      );
+    }
+    throw new TextGenerationError(
+      'キャッチコピー生成中に不明なエラーが発生しました',
+      'UNKNOWN'
+    );
   }
 }
 
 /**
  * キャッチコピーの結果を検証
  */
-function validateCatchcopyResult(data: any): CatchcopyResult {
+function validateCatchcopyResult(data: unknown): CatchcopyResult {
   if (!data || typeof data !== 'object') {
-    throw new Error('Invalid response format');
+    throw new TextGenerationError(
+      'APIレスポンスの形式が不正です',
+      'INVALID_INPUT',
+      { receivedData: typeof data }
+    );
   }
 
-  const { main, sub, variations } = data;
+  const obj = data as Record<string, unknown>;
+  const { main, sub, variations } = obj;
 
   if (typeof main !== 'string' || main.length === 0) {
-    throw new Error('Invalid or missing "main" field');
+    throw new TextGenerationError(
+      'メインコピー（main）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'main', received: typeof main }
+    );
   }
 
   if (typeof sub !== 'string' || sub.length === 0) {
-    throw new Error('Invalid or missing "sub" field');
+    throw new TextGenerationError(
+      'サブコピー（sub）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'sub', received: typeof sub }
+    );
   }
 
   if (!Array.isArray(variations) || variations.length === 0) {
-    throw new Error('Invalid or missing "variations" field');
+    throw new TextGenerationError(
+      '代替案（variations）が不正または欠落しています',
+      'INVALID_INPUT',
+      { field: 'variations', received: typeof variations }
+    );
   }
 
   // 全ての代替案が文字列であることを確認
   if (!variations.every((variation) => typeof variation === 'string')) {
-    throw new Error('All variations must be strings');
+    throw new TextGenerationError(
+      '代替案には文字列のみ指定できます',
+      'INVALID_INPUT',
+      { field: 'variations' }
+    );
   }
 
   return {

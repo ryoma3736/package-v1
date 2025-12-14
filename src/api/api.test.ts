@@ -2,7 +2,8 @@
  * 統合API テスト
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import sharp from 'sharp';
 import {
   createJob,
   getJob,
@@ -16,7 +17,35 @@ import {
   estimateProcessingTime,
   cleanupOldJobs,
 } from './jobs/queue.js';
-import { ProductGenerationAPI } from './index.js';
+import { ProductGenerationAPI, APIValidationError } from './index.js';
+
+// テスト用のJPEG画像を生成
+async function createTestJpeg(width = 100, height = 100): Promise<Buffer> {
+  return await sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 255, g: 0, b: 0 },
+    },
+  })
+    .jpeg()
+    .toBuffer();
+}
+
+// テスト用のPNG画像を生成
+async function createTestPng(width = 100, height = 100): Promise<Buffer> {
+  return await sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 0, g: 255, b: 0 },
+    },
+  })
+    .png()
+    .toBuffer();
+}
 
 describe('Job Queue', () => {
   beforeEach(() => {
@@ -230,5 +259,124 @@ describe('ProductGenerationAPI', () => {
       expect(deleted).toBe(true);
       expect(api.getStatus(job.id)).toBeNull();
     });
+  });
+
+  describe('startGeneration validation', () => {
+    it('should throw APIValidationError for null image buffer', async () => {
+      await expect(
+        api.startGeneration(null as unknown as Buffer, {})
+      ).rejects.toThrow(APIValidationError);
+    });
+
+    it('should throw APIValidationError for empty buffer', async () => {
+      await expect(
+        api.startGeneration(Buffer.from([]), {})
+      ).rejects.toThrow(APIValidationError);
+    });
+
+    it('should throw APIValidationError for invalid image format', async () => {
+      const invalidBuffer = Buffer.from('not an image');
+      await expect(
+        api.startGeneration(invalidBuffer, {})
+      ).rejects.toThrow(APIValidationError);
+    });
+
+    it('should throw APIValidationError for brand name too long', async () => {
+      const validImage = await createTestJpeg();
+      const apiWithKeys = new ProductGenerationAPI({
+        claudeApiKey: 'test-key',
+        openaiApiKey: 'test-key',
+      });
+
+      await expect(
+        apiWithKeys.startGeneration(validImage, {
+          brandName: 'a'.repeat(101),
+        })
+      ).rejects.toThrow(APIValidationError);
+
+      apiWithKeys.shutdown();
+    });
+
+    it('should throw APIValidationError for invalid variation count', async () => {
+      const validImage = await createTestJpeg();
+      const apiWithKeys = new ProductGenerationAPI({
+        claudeApiKey: 'test-key',
+        openaiApiKey: 'test-key',
+      });
+
+      await expect(
+        apiWithKeys.startGeneration(validImage, {
+          packageVariations: 0,
+        })
+      ).rejects.toThrow(APIValidationError);
+
+      await expect(
+        apiWithKeys.startGeneration(validImage, {
+          packageVariations: 11,
+        })
+      ).rejects.toThrow(APIValidationError);
+
+      apiWithKeys.shutdown();
+    });
+
+    it('should throw APIValidationError for missing API keys', async () => {
+      const validImage = await createTestJpeg();
+
+      await expect(
+        api.startGeneration(validImage, {})
+      ).rejects.toThrow(APIValidationError);
+    });
+
+    it('should accept valid JPEG image with API keys', async () => {
+      const validImage = await createTestJpeg();
+      const apiWithKeys = new ProductGenerationAPI({
+        claudeApiKey: 'test-key',
+        openaiApiKey: 'test-key',
+      });
+
+      // 画像バリデーションは通過するが、APIキーが無効なため後でエラーになる
+      // ここでは入力バリデーションのみテスト
+      const promise = apiWithKeys.startGeneration(validImage, {
+        brandName: 'Test Brand',
+        productName: 'Test Product',
+        packageVariations: 3,
+      });
+
+      // 入力バリデーションは通過してジョブIDが返る
+      const result = await promise;
+      expect(result.jobId).toBeDefined();
+
+      apiWithKeys.shutdown();
+    });
+
+    it('should accept valid PNG image', async () => {
+      const validImage = await createTestPng();
+      const apiWithKeys = new ProductGenerationAPI({
+        claudeApiKey: 'test-key',
+        openaiApiKey: 'test-key',
+      });
+
+      const result = await apiWithKeys.startGeneration(validImage, {});
+      expect(result.jobId).toBeDefined();
+
+      apiWithKeys.shutdown();
+    });
+  });
+});
+
+describe('APIValidationError', () => {
+  it('should create error with proper properties', () => {
+    const error = new APIValidationError(
+      'Test error',
+      'testField',
+      { detail: 'test' }
+    );
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toBeInstanceOf(APIValidationError);
+    expect(error.message).toBe('Test error');
+    expect(error.field).toBe('testField');
+    expect(error.details).toEqual({ detail: 'test' });
+    expect(error.name).toBe('APIValidationError');
   });
 });

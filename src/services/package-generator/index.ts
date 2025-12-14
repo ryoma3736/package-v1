@@ -36,7 +36,6 @@ import {
   PackageGenerationResult,
   PackageGenerationError,
   GeneratedPackageDesign,
-  DesignPrompt,
   GenerationError,
 } from './types.js';
 import { loadTemplate, autoSelectTemplate } from './template-engine.js';

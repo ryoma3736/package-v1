@@ -16,7 +16,7 @@ export async function applyLayout(
 ): Promise<Buffer> {
   const { template, backgroundColor, padding = 0 } = layoutConfig;
 
-  let image = sharp(baseImageBuffer);
+  const image = sharp(baseImageBuffer);
 
   switch (template) {
     case 'simple':
