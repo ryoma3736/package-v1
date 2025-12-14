@@ -1,0 +1,440 @@
+# ==============================================================================
+# Genie AI - 商品画像自動生成システム UI/商品画像 Nano Banana Pro プロンプト集
+# ==============================================================================
+# このファイルはNano Banana Pro (Gemini 3 Pro Image)で使用するYAML構造化プロンプトです
+# ==============================================================================
+
+# ============================================================================
+# 1. システム概要インフォグラフィック
+# ============================================================================
+system_overview_infographic:
+  visual_communication_format:
+    metadata:
+      format_name: "Genie AI System Overview Infographic"
+      description: "商品画像から自動生成システムの全体像を手書き風で解説"
+      target_audience: "General Audience / Beginners / Non-technical stakeholders"
+      language: "Japanese"
+
+    global_style_definition:
+      art_style:
+        primary_aesthetic: "Graphic Recording / Hand-drawn Sketch"
+        texture_reference: "Marker pens and colored pencils on paper texture"
+        overall_vibe: "Friendly, soft, approachable, tech-savvy but human"
+        imperfection_level: "High - embrace rough lines, human touch"
+      color_palette:
+        background: "Clean white paper texture"
+        primary_colors:
+          text_and_outlines: "Black marker"
+          emphasis_attention: "Yellow / Orange marker"
+          structure_safety: "Blue / Green marker"
+          critical_warning: "Red marker"
+
+    image_prompt_template:
+      image_id: "Genie_System_Overview"
+      concept_title: "商品画像1枚で全部自動生成！"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            中央に大きなスマートフォンを持った手。
+            画面には商品画像（シンプルなボトル）が表示されている。
+            スマホから3つの矢印が放射状に出ている。
+          supporting_elements: |
+            左側: パッケージデザインの箱（3つのバリエーション）
+            上側: SNS広告画像（Instagram風、Twitter風フレーム）
+            右側: テキストが書かれたノート（商品説明、キャッチコピー）
+            周りに小さなキラキラ星エフェクト
+          background_setting: "白い紙のテクスチャ背景"
+          state_description: "魔法のように生成される瞬間、ワクワク感"
+
+        text_elements:
+          main_labels:
+            - text: "商品画像"
+              attached_to: "スマートフォン画面"
+            - text: "パッケージデザイン"
+              attached_to: "左側の箱群"
+            - text: "広告画像"
+              attached_to: "上側のSNSフレーム"
+            - text: "商品説明文"
+              attached_to: "右側のノート"
+          explanatory_annotation: |
+            📸 1枚の画像をアップするだけ
+            ↓
+            🎨 パッケージ・広告・テキストが自動生成！
+
+        composition_and_emphasis:
+          layout_structure: "Center-out radial (スマホが中心、3方向に展開)"
+          focal_point: "中央のスマートフォンと商品画像"
+          emphasis_technique: "黄色のマーカーでスマホを囲む、矢印は太く"
+
+        style_application_notes:
+          texture_focus: "マーカーペンのインクのにじみ感を強調"
+          color_palette_usage: "青=パッケージ、黄=広告、緑=テキスト"
+          mood_direction: "Excited, Magical, Easy-to-use"
+
+# ============================================================================
+# 2. メインUI画面 - アップロード画面
+# ============================================================================
+ui_upload_screen:
+  visual_communication_format:
+    metadata:
+      format_name: "Genie AI Upload Screen UI"
+      description: "商品画像アップロード画面のUIモックアップ"
+      target_audience: "Product Designers / Developers"
+      language: "Japanese"
+
+    image_prompt_template:
+      image_id: "UI_Upload_Screen"
+      concept_title: "画像アップロード画面"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            手書き風のワイヤーフレーム画面。
+            大きな点線の四角形（ドロップゾーン）が中央にある。
+            四角形の中にクラウドアップロードアイコンと「+」マーク。
+          supporting_elements: |
+            上部: ロゴ「Genie AI」とナビゲーションバー
+            ドロップゾーン下: 「クリックまたはドラッグ&ドロップ」テキスト
+            対応フォーマット表示: JPG, PNG, WEBP
+            ファイルサイズ制限: 最大10MB
+            下部: 「生成開始」ボタン（グレーアウト状態）
+          background_setting: "シンプルな白背景のアプリ画面"
+          state_description: "待機状態、ユーザーの操作を待っている"
+
+        text_elements:
+          main_labels:
+            - text: "Genie AI"
+              attached_to: "ヘッダーロゴ"
+            - text: "商品画像をアップロード"
+              attached_to: "ドロップゾーン上部"
+            - text: "クリックまたはドラッグ&ドロップ"
+              attached_to: "ドロップゾーン内"
+            - text: "JPG, PNG, WEBP (最大10MB)"
+              attached_to: "ドロップゾーン下"
+            - text: "生成開始"
+              attached_to: "下部ボタン"
+          explanatory_annotation: |
+            ・シンプルで迷わないUI
+            ・ワンアクションで開始
+
+        composition_and_emphasis:
+          layout_structure: "Center-focused vertical layout"
+          focal_point: "中央のドロップゾーン"
+          emphasis_technique: "点線ボーダーを青色で強調"
+
+        style_application_notes:
+          texture_focus: "ペンで描いたようなワイヤーフレーム感"
+          color_palette_usage: "青=アクション可能エリア"
+          mood_direction: "Clean, Inviting, Simple"
+
+# ============================================================================
+# 3. メインUI画面 - 生成進捗画面
+# ============================================================================
+ui_progress_screen:
+  visual_communication_format:
+    metadata:
+      format_name: "Genie AI Progress Screen UI"
+      description: "生成進捗表示画面のUIモックアップ"
+
+    image_prompt_template:
+      image_id: "UI_Progress_Screen"
+      concept_title: "生成進捗画面"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            4つのステップを示す横並びのプログレスバー。
+            各ステップにアイコンとラベル。
+            現在のステップ（2番目）が光っている/強調されている。
+          supporting_elements: |
+            左上: アップロードした商品画像のサムネイル
+            中央: 大きな円形プログレスインジケータ「42%」
+            各ステップ:
+            1. 🔍 分析中 (完了 ✓)
+            2. 📦 パッケージ生成中 (進行中)
+            3. 🎨 広告生成中 (待機)
+            4. 📝 テキスト生成中 (待機)
+            下部: 推定残り時間「約45秒」
+          background_setting: "白背景のアプリ画面"
+          state_description: "処理進行中、期待感を高める"
+
+        text_elements:
+          main_labels:
+            - text: "生成中..."
+              attached_to: "ページタイトル"
+            - text: "42%"
+              attached_to: "円形プログレス内"
+            - text: "分析完了"
+              attached_to: "ステップ1"
+            - text: "パッケージ生成中"
+              attached_to: "ステップ2"
+            - text: "広告画像"
+              attached_to: "ステップ3"
+            - text: "テキスト"
+              attached_to: "ステップ4"
+            - text: "残り約45秒"
+              attached_to: "下部"
+          explanatory_annotation: |
+            ・進捗が見える安心感
+            ・各ステップの状態が明確
+
+        composition_and_emphasis:
+          layout_structure: "Top-down with horizontal progress bar"
+          focal_point: "円形プログレスインジケータと%表示"
+          emphasis_technique: "進行中ステップを黄色で強調"
+
+        style_application_notes:
+          texture_focus: "手書きアニメーションの1フレームのような"
+          color_palette_usage: "緑=完了、黄=進行中、グレー=待機"
+          mood_direction: "Anticipation, Progress, Excitement"
+
+# ============================================================================
+# 4. メインUI画面 - 結果表示画面
+# ============================================================================
+ui_result_screen:
+  visual_communication_format:
+    metadata:
+      format_name: "Genie AI Result Screen UI"
+      description: "生成結果表示画面のUIモックアップ"
+
+    image_prompt_template:
+      image_id: "UI_Result_Screen"
+      concept_title: "生成結果画面"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            3つのタブで切り替え可能な結果表示エリア。
+            現在は「パッケージ」タブが選択されている。
+            グリッドレイアウトで3つのパッケージデザインが並ぶ。
+          supporting_elements: |
+            上部: タブバー [パッケージ] [広告] [テキスト]
+            中央: 3列のカードグリッド
+            各カード: サムネイル + ダウンロードボタン
+            右上: 「すべてダウンロード」ボタン
+            下部: ページネーション 1/3
+          background_setting: "白背景のアプリ画面"
+          state_description: "成果物が表示され、達成感"
+
+        text_elements:
+          main_labels:
+            - text: "生成完了！"
+              attached_to: "ページタイトル横"
+            - text: "パッケージ"
+              attached_to: "選択中タブ"
+            - text: "広告"
+              attached_to: "タブ2"
+            - text: "テキスト"
+              attached_to: "タブ3"
+            - text: "ダウンロード"
+              attached_to: "各カードボタン"
+            - text: "すべてダウンロード (ZIP)"
+              attached_to: "右上ボタン"
+          explanatory_annotation: |
+            ・タブで簡単切り替え
+            ・個別/一括ダウンロード
+
+        composition_and_emphasis:
+          layout_structure: "Tab-based content with grid layout"
+          focal_point: "生成されたパッケージデザインカード"
+          emphasis_technique: "選択中タブを青で強調、カードに軽いシャドウ"
+
+        style_application_notes:
+          texture_focus: "カードのエッジを手書き風に"
+          color_palette_usage: "青=選択中、緑=ダウンロードボタン"
+          mood_direction: "Satisfied, Accomplished, Ready to use"
+
+# ============================================================================
+# 5. 商品画像サンプル - 化粧品ボトル
+# ============================================================================
+product_sample_cosmetic:
+  visual_communication_format:
+    metadata:
+      format_name: "Sample Product Image - Cosmetic Bottle"
+      description: "システムデモ用の商品画像サンプル"
+
+    image_prompt_template:
+      image_id: "Product_Cosmetic_Bottle"
+      concept_title: "化粧品ボトル商品画像"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            高級感のあるガラス製の化粧水ボトル。
+            シンプルなミニマリストデザイン。
+            ポンプ式ディスペンサー付き。
+          supporting_elements: |
+            ボトルは半透明、中の液体がうっすら見える
+            ラベルは小さく控えめ
+            背景は純白またはライトグレー
+            自然光のような柔らかい照明
+          background_setting: "無背景（白抜き）または薄いグラデーション"
+          state_description: "高級感、清潔感、シンプル"
+
+        text_elements:
+          main_labels:
+            - text: "SAMPLE"
+              attached_to: "ラベル（デモ用）"
+          explanatory_annotation: "EC商品撮影風のプロフェッショナルな商品写真"
+
+        style_application_notes:
+          texture_focus: "ガラスの透明感と反射"
+          color_palette_usage: "白、ガラスの透明、ゴールドアクセント"
+          mood_direction: "Premium, Clean, Trustworthy"
+
+# ============================================================================
+# 6. 商品画像サンプル - 食品パッケージ
+# ============================================================================
+product_sample_food:
+  visual_communication_format:
+    metadata:
+      format_name: "Sample Product Image - Food Package"
+      description: "システムデモ用の食品商品画像サンプル"
+
+    image_prompt_template:
+      image_id: "Product_Food_Package"
+      concept_title: "食品パッケージ商品画像"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            クラフト紙風のスタンドパウチ（自立型袋）。
+            窓付きで中身が少し見える。
+            オーガニック/ナチュラルな雰囲気。
+          supporting_elements: |
+            上部にジッパー付きの開封口
+            小さなブランドロゴスペース
+            環境配慮マーク
+            背景は木目調または白
+          background_setting: "無背景またはナチュラルウッド"
+          state_description: "自然派、健康的、温かみ"
+
+        text_elements:
+          main_labels:
+            - text: "ORGANIC"
+              attached_to: "パッケージ上部"
+          explanatory_annotation: "食品EC向けのナチュラルな商品写真"
+
+        style_application_notes:
+          texture_focus: "クラフト紙の質感"
+          color_palette_usage: "ブラウン、ベージュ、グリーンアクセント"
+          mood_direction: "Natural, Healthy, Eco-friendly"
+
+# ============================================================================
+# 7. データフロー図解
+# ============================================================================
+data_flow_infographic:
+  visual_communication_format:
+    metadata:
+      format_name: "Genie AI Data Flow Infographic"
+      description: "システムのデータフローを手書き風で図解"
+
+    image_prompt_template:
+      image_id: "Data_Flow_Diagram"
+      concept_title: "Genie AI データフロー"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            左から右への流れるようなフローチャート。
+            パイプラインを水が流れるようなイメージ。
+            各処理ステップを「工場」や「機械」のメタファーで表現。
+          supporting_elements: |
+            入口: カメラアイコン（画像入力）
+            処理1: 虫眼鏡（AI分析）
+            処理2: 3つの工場（パッケージ/広告/テキスト生成）
+            出口: 複数のファイルアイコン（出力）
+            各ステップを繋ぐパイプと矢印
+          background_setting: "方眼紙のテクスチャ"
+          state_description: "流れるような、効率的な処理"
+
+        text_elements:
+          main_labels:
+            - text: "画像入力"
+              attached_to: "入口"
+            - text: "AI分析"
+              attached_to: "虫眼鏡"
+            - text: "パッケージ工場"
+              attached_to: "工場1"
+            - text: "広告工場"
+              attached_to: "工場2"
+            - text: "テキスト工場"
+              attached_to: "工場3"
+            - text: "完成品"
+              attached_to: "出口"
+          explanatory_annotation: |
+            入力 → 分析 → 並列生成 → 出力
+            ＊3つの生成は同時並行処理！
+
+        composition_and_emphasis:
+          layout_structure: "Left-to-Right horizontal flow"
+          focal_point: "中央の3つの工場（並列処理を強調）"
+          emphasis_technique: "工場を色分け、矢印を太く"
+
+        style_application_notes:
+          texture_focus: "工場をかわいい擬人化した機械として"
+          color_palette_usage: "青=パッケージ、黄=広告、緑=テキスト"
+          mood_direction: "Efficient, Organized, Powerful"
+
+# ============================================================================
+# 8. 価値提案インフォグラフィック
+# ============================================================================
+value_proposition_infographic:
+  visual_communication_format:
+    metadata:
+      format_name: "Genie AI Value Proposition"
+      description: "ビフォーアフターで価値を訴求"
+
+    image_prompt_template:
+      image_id: "Value_Proposition"
+      concept_title: "従来 vs Genie AI"
+      prompt_description:
+        visual_elements:
+          main_subject_metaphor: |
+            画面を2分割。左が「従来」、右が「Genie AI」。
+            中央に大きな「VS」または矢印。
+          supporting_elements: |
+            左側（従来）:
+            - 疲れた表情のデザイナー棒人間
+            - 積み上がったタスクの山
+            - 時計（長い時間）
+            - 💰高コストを示す札束
+
+            右側（Genie AI）:
+            - 笑顔のビジネスパーソン棒人間
+            - 魔法のランプ/ジーニー
+            - 時計（短い時間）「30秒」
+            - 効率的なワンクリック
+          background_setting: "白紙、中央で分割線"
+          state_description: "劇的なビフォーアフターの対比"
+
+        text_elements:
+          main_labels:
+            - text: "従来の方法"
+              attached_to: "左側上部"
+            - text: "Genie AI"
+              attached_to: "右側上部"
+            - text: "3-5日かかる"
+              attached_to: "左側時計"
+            - text: "30秒で完了"
+              attached_to: "右側時計"
+            - text: "デザイナー費用 5万円〜"
+              attached_to: "左側"
+            - text: "月額 980円〜"
+              attached_to: "右側"
+          explanatory_annotation: |
+            ❌ 時間・コスト・スキルの壁
+            ⭕ ワンクリックで解決！
+
+        composition_and_emphasis:
+          layout_structure: "Comparison split (左右対比)"
+          focal_point: "時間とコストの数字"
+          emphasis_technique: "左は暗い色調、右は明るい色調"
+
+        style_application_notes:
+          texture_focus: "表情豊かな棒人間キャラクター"
+          color_palette_usage: "左=グレー/赤、右=青/緑/黄"
+          mood_direction: "Problem → Solution, Pain → Relief"
+
+# ==============================================================================
+# 使い方
+# ==============================================================================
+# 1. このYAMLファイルから必要なプロンプトセクションをコピー
+# 2. Google AI Studio または Gemini API に入力
+# 3. 「上記のYAMLに従って画像を生成してください」と指示
+# 4. 生成された画像を docs/design/images/ に保存
+# ==============================================================================

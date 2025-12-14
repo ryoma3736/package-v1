@@ -1,0 +1,48 @@
+{
+  "name": "Cylindrical Bottle Package",
+  "type": "bottle-cylinder",
+  "description": "円筒形ボトル型パッケージデザイン。飲料、化粧品、シャンプーなどに最適です。",
+  "recommendedCategories": [
+    "飲料",
+    "化粧品",
+    "シャンプー",
+    "ボディケア",
+    "洗剤",
+    "医薬品"
+  ],
+  "designParams": {
+    "primarySurface": "label",
+    "aspectRatio": "3:4",
+    "recommendedSize": {
+      "width": 768,
+      "height": 1024
+    },
+    "layoutZones": {
+      "logo": {
+        "x": 200,
+        "y": 50,
+        "width": 368,
+        "height": 100
+      },
+      "visual": {
+        "x": 100,
+        "y": 180,
+        "width": 568,
+        "height": 400
+      },
+      "productName": {
+        "x": 100,
+        "y": 600,
+        "width": 568,
+        "height": 150
+      },
+      "description": {
+        "x": 100,
+        "y": 770,
+        "width": 568,
+        "height": 200
+      }
+    }
+  },
+  "promptTemplate": "Create an elegant product package design for a cylindrical bottle with label.\n\nProduct Information:\n- Category: {category}\n- Primary Color: {primaryColor}\n- Secondary Colors: {secondaryColors}\n- Surface Texture: {texture}\n\nDesign Requirements:\n- Sophisticated cylindrical bottle design\n- Premium label design wrapped around bottle\n- Vertical orientation with full bottle visible\n- Transparent or colored bottle material\n- Professional label artwork\n- Elegant typography and branding\n- Reflective surface and professional lighting\n- Cap or closure design consideration\n- Brand logo prominently displayed\n- Product benefits and features clearly communicated\n- Luxury or premium aesthetic where appropriate\n- Retail-ready presentation with shadows and highlights\n\nThe design should showcase a realistic cylindrical bottle with a professionally designed label, proper lighting, reflections, and premium presentation suitable for retail display."
+}

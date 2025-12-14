@@ -1,0 +1,26 @@
+{
+  "name": "Web Banner Leaderboard",
+  "platform": "web-banner-leaderboard",
+  "size": {
+    "width": 728,
+    "height": 90
+  },
+  "layout": {
+    "template": "split",
+    "padding": 10,
+    "backgroundColor": "#FFFFFF"
+  },
+  "textOverlays": [
+    {
+      "text": "{{headline}}",
+      "position": "center",
+      "fontSize": 28,
+      "fontFamily": "Arial, sans-serif",
+      "color": "#333333",
+      "backgroundColor": "rgba(255, 255, 255, 0.9)",
+      "padding": 10
+    }
+  ],
+  "recommendedStyles": ["minimalist"],
+  "description": "Standard leaderboard banner for website headers"
+}

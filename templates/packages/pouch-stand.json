@@ -1,0 +1,48 @@
+{
+  "name": "Stand Pouch Package",
+  "type": "pouch-stand",
+  "description": "スタンドパウチ型パッケージデザイン。食品、スナック、液体製品に最適です。",
+  "recommendedCategories": [
+    "食品",
+    "飲料",
+    "調味料",
+    "スナック",
+    "ペットフード",
+    "サプリメント"
+  ],
+  "designParams": {
+    "primarySurface": "front",
+    "aspectRatio": "3:4",
+    "recommendedSize": {
+      "width": 768,
+      "height": 1024
+    },
+    "layoutZones": {
+      "logo": {
+        "x": 50,
+        "y": 40,
+        "width": 150,
+        "height": 60
+      },
+      "visual": {
+        "x": 50,
+        "y": 150,
+        "width": 668,
+        "height": 500
+      },
+      "productName": {
+        "x": 50,
+        "y": 680,
+        "width": 668,
+        "height": 120
+      },
+      "description": {
+        "x": 50,
+        "y": 820,
+        "width": 668,
+        "height": 150
+      }
+    }
+  },
+  "promptTemplate": "Create a modern product package design for a standing pouch (stand-up pouch).\n\nProduct Information:\n- Category: {category}\n- Primary Color: {primaryColor}\n- Secondary Colors: {secondaryColors}\n- Surface Texture: {texture}\n\nDesign Requirements:\n- Contemporary and appealing stand pouch design\n- Flexible packaging with resealable top\n- Vertical orientation showcasing front panel\n- Appetizing visual presentation for food products\n- Clear window or product imagery\n- Professional brand identity\n- Eye-catching shelf presence\n- Modern typography suitable for flexible packaging\n- Include product benefits and key features\n- Design should reflect freshness and quality\n\nThe design should show a realistic standing pouch package with proper lighting, shadows, and professional retail presentation."
+}

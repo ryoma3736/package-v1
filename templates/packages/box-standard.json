@@ -1,0 +1,48 @@
+{
+  "name": "Standard Box Package",
+  "type": "box-standard",
+  "description": "標準的な箱型パッケージデザイン。食品、電子機器、日用品など幅広い商品に適しています。",
+  "recommendedCategories": [
+    "電子機器",
+    "医薬品",
+    "日用品",
+    "衣料品",
+    "玩具",
+    "食品"
+  ],
+  "designParams": {
+    "primarySurface": "front",
+    "aspectRatio": "4:3",
+    "recommendedSize": {
+      "width": 1024,
+      "height": 768
+    },
+    "layoutZones": {
+      "logo": {
+        "x": 50,
+        "y": 50,
+        "width": 200,
+        "height": 80
+      },
+      "visual": {
+        "x": 100,
+        "y": 200,
+        "width": 824,
+        "height": 400
+      },
+      "productName": {
+        "x": 100,
+        "y": 620,
+        "width": 824,
+        "height": 100
+      },
+      "description": {
+        "x": 50,
+        "y": 720,
+        "width": 924,
+        "height": 50
+      }
+    }
+  },
+  "promptTemplate": "Create a professional product package design for a standard rectangular box.\n\nProduct Information:\n- Category: {category}\n- Primary Color: {primaryColor}\n- Secondary Colors: {secondaryColors}\n- Surface Texture: {texture}\n\nDesign Requirements:\n- Modern and clean design aesthetic\n- Clear product visibility and branding\n- Professional typography and layout\n- High-quality photorealistic rendering\n- Box packaging with front face prominently displayed\n- Include brand identity elements\n- Maintain visual hierarchy with logo, product name, and key features\n- Design should be print-ready and suitable for retail display\n\nThe design should showcase the front face of a rectangular box package with professional lighting and presentation."
+}

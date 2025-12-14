@@ -1,0 +1,25 @@
+{
+  "name": "Twitter Card",
+  "platform": "twitter-card",
+  "size": {
+    "width": 1200,
+    "height": 628
+  },
+  "layout": {
+    "template": "overlay",
+    "backgroundColor": "#000000"
+  },
+  "textOverlays": [
+    {
+      "text": "{{headline}}",
+      "position": "bottom-left",
+      "fontSize": 56,
+      "fontFamily": "Arial, sans-serif",
+      "color": "#FFFFFF",
+      "backgroundColor": "rgba(0, 0, 0, 0.7)",
+      "padding": 25
+    }
+  ],
+  "recommendedStyles": ["realistic", "minimalist"],
+  "description": "Landscape format optimized for Twitter summary cards"
+}

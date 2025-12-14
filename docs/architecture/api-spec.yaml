@@ -1,0 +1,900 @@
+openapi: 3.1.0
+info:
+  title: Genie AI Marketing Content Generator API
+  version: 1.0.0
+  description: |
+    REST API for generating AI-powered marketing content from product images.
+
+    ## Features
+    - Image upload and analysis
+    - Multi-platform content generation
+    - Package design creation
+    - Real-time job status tracking
+
+  contact:
+    name: Genie API Support
+    email: api@genie.ai
+  license:
+    name: Proprietary
+    url: https://genie.ai/terms
+
+servers:
+  - url: https://api.genie.ai/v1
+    description: Production
+  - url: https://staging-api.genie.ai/v1
+    description: Staging
+  - url: http://localhost:3000/api/v1
+    description: Local Development
+
+tags:
+  - name: upload
+    description: Image upload operations
+  - name: jobs
+    description: Generation job management
+  - name: assets
+    description: Generated asset retrieval
+  - name: analysis
+    description: Image analysis operations
+
+security:
+  - BearerAuth: []
+
+paths:
+  /upload/presigned:
+    post:
+      tags: [upload]
+      summary: Get presigned URL for direct S3 upload
+      description: |
+        Generates a presigned S3 URL for direct client-side image upload.
+        This avoids routing large files through the API server.
+      operationId: getPresignedUrl
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+                - contentType
+                - fileSize
+              properties:
+                filename:
+                  type: string
+                  example: product-image.jpg
+                  description: Original filename
+                contentType:
+                  type: string
+                  enum:
+                    - image/jpeg
+                    - image/png
+                    - image/webp
+                  example: image/jpeg
+                fileSize:
+                  type: integer
+                  minimum: 1
+                  maximum: 10485760
+                  example: 2048576
+                  description: File size in bytes (max 10MB)
+      responses:
+        '200':
+          description: Presigned URL generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Presigned S3 upload URL
+                    example: https://genie-assets.s3.amazonaws.com/uploads/...?signature=...
+                  key:
+                    type: string
+                    description: S3 object key
+                    example: uploads/user_123/1702468800000-product-image.jpg
+                  expiresIn:
+                    type: integer
+                    description: URL expiration time in seconds
+                    example: 300
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /jobs:
+    post:
+      tags: [jobs]
+      summary: Create a new generation job
+      description: |
+        Creates a new job to analyze a product image and generate marketing content.
+        The image must already be uploaded to S3 using the presigned URL.
+      operationId: createJob
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - s3Key
+              properties:
+                s3Key:
+                  type: string
+                  description: S3 object key from presigned upload
+                  example: uploads/user_123/1702468800000-product-image.jpg
+                preferences:
+                  $ref: '#/components/schemas/GenerationPreferences'
+      responses:
+        '201':
+          description: Job created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                    format: uuid
+                    example: job_abc123def456
+                  status:
+                    type: string
+                    enum: [pending, analyzing]
+                    example: pending
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: '2025-12-13T10:30:00Z'
+                  estimatedCompletionTime:
+                    type: integer
+                    description: Estimated time to completion in seconds
+                    example: 30
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '402':
+          $ref: '#/components/responses/PaymentRequiredError'
+
+    get:
+      tags: [jobs]
+      summary: List user's jobs
+      description: Get paginated list of jobs for the authenticated user
+      operationId: listJobs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, analyzing, generating, completed, failed]
+          description: Filter by job status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: Pagination cursor from previous response
+      responses:
+        '200':
+          description: Jobs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Job'
+                  pagination:
+                    type: object
+                    properties:
+                      nextCursor:
+                        type: string
+                        nullable: true
+                      hasMore:
+                        type: boolean
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /jobs/{jobId}:
+    get:
+      tags: [jobs]
+      summary: Get job details
+      description: Retrieve detailed information about a specific job
+      operationId: getJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: job_abc123def456
+      responses:
+        '200':
+          description: Job details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags: [jobs]
+      summary: Cancel or delete a job
+      description: Cancel a running job or delete a completed job and its assets
+      operationId: deleteJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Job deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Job cannot be deleted (e.g., already processing)
+
+  /jobs/{jobId}/regenerate:
+    post:
+      tags: [jobs]
+      summary: Regenerate content with new preferences
+      description: |
+        Regenerate marketing content for an existing job with updated preferences.
+        The original analysis is reused to save time and costs.
+      operationId: regenerateJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferences:
+                  $ref: '#/components/schemas/GenerationPreferences'
+                regenerate:
+                  type: array
+                  items:
+                    type: string
+                    enum: [packages, ads, content]
+                  description: Which assets to regenerate
+                  example: [packages, ads]
+      responses:
+        '200':
+          description: Regeneration started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [generating]
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /analysis/{jobId}:
+    get:
+      tags: [analysis]
+      summary: Get product analysis
+      description: Retrieve the AI-generated product analysis
+      operationId: getAnalysis
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analysis retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductAnalysis'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /assets/{jobId}:
+    get:
+      tags: [assets]
+      summary: Get all generated assets
+      description: Retrieve all generated assets (images and content) for a job
+      operationId: getAssets
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Assets retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratedAssets'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /assets/{jobId}/download:
+    post:
+      tags: [assets]
+      summary: Download assets as ZIP
+      description: Generate and download a ZIP file containing all generated assets
+      operationId: downloadAssets
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum: [zip, tar]
+                  default: zip
+                include:
+                  type: array
+                  items:
+                    type: string
+                    enum: [packages, ads, content, analysis]
+                  default: [packages, ads, content]
+      responses:
+        '200':
+          description: Download URL generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  downloadUrl:
+                    type: string
+                    format: uri
+                    description: Presigned download URL (expires in 1 hour)
+                  expiresAt:
+                    type: string
+                    format: date-time
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /webhooks:
+    post:
+      tags: [webhooks]
+      summary: Register a webhook
+      description: Register a webhook URL to receive job status updates
+      operationId: registerWebhook
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - events
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: https://your-app.com/webhooks/genie
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - job.created
+                      - job.analyzing
+                      - job.generating
+                      - job.completed
+                      - job.failed
+                secret:
+                  type: string
+                  description: Secret for HMAC signature verification
+      responses:
+        '201':
+          description: Webhook registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhookId:
+                    type: string
+                  url:
+                    type: string
+                  events:
+                    type: array
+                    items:
+                      type: string
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from authentication provider.
+        Include in Authorization header: `Authorization: Bearer <token>`
+
+  schemas:
+    GenerationPreferences:
+      type: object
+      properties:
+        language:
+          type: string
+          enum: [en, ja, es, fr, de, zh, ko]
+          default: en
+          description: Content generation language
+        tone:
+          type: string
+          enum: [professional, casual, playful, luxury, technical]
+          default: professional
+          description: Content tone and style
+        platforms:
+          type: array
+          items:
+            type: string
+            enum: [ecommerce, facebook, instagram, google-ads, linkedin, tiktok]
+          default: [ecommerce, facebook, instagram]
+          description: Target platforms for content
+        packageStyles:
+          type: array
+          items:
+            type: string
+            enum: [modern, vintage, minimalist, bold, elegant, playful]
+          default: [modern, minimalist, bold]
+          description: Package design style variations
+        targetAudience:
+          type: object
+          properties:
+            ageRange:
+              type: string
+              example: 25-45
+            interests:
+              type: array
+              items:
+                type: string
+              example: [fitness, sustainability, technology]
+        contentLength:
+          type: string
+          enum: [short, medium, long]
+          default: medium
+
+    ProductAnalysis:
+      type: object
+      properties:
+        jobId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        product:
+          type: object
+          properties:
+            category:
+              type: string
+              example: beverage
+            subcategory:
+              type: string
+              example: energy-drink
+            type:
+              type: string
+              example: canned-drink
+        visual:
+          type: object
+          properties:
+            dominantColors:
+              type: array
+              items:
+                type: object
+                properties:
+                  hex:
+                    type: string
+                    example: '#FF6B35'
+                  name:
+                    type: string
+                    example: coral-orange
+                  percentage:
+                    type: number
+                    example: 45
+            style:
+              type: string
+              example: modern-energetic
+            mood:
+              type: string
+              example: dynamic-bold
+        branding:
+          type: object
+          properties:
+            targetAudience:
+              type: object
+              properties:
+                ageRange:
+                  type: string
+                  example: 18-35
+                demographics:
+                  type: array
+                  items:
+                    type: string
+                  example: [young-professionals, athletes]
+                psychographics:
+                  type: array
+                  items:
+                    type: string
+                  example: [achievement-oriented, health-conscious]
+            personality:
+              type: array
+              items:
+                type: string
+              example: [energetic, confident, modern]
+            tone:
+              type: string
+              example: motivational-upbeat
+        features:
+          type: object
+          properties:
+            packaging:
+              type: string
+              example: slim-can
+            finish:
+              type: string
+              example: matte
+            textVisibility:
+              type: string
+              example: high-contrast
+            uniqueElements:
+              type: array
+              items:
+                type: string
+              example: [geometric-patterns, gradient-effects]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.89
+
+    Job:
+      type: object
+      properties:
+        jobId:
+          type: string
+          example: job_abc123def456
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [pending, analyzing, generating, completed, failed]
+        originalImage:
+          type: string
+          format: uri
+          description: CDN URL of original uploaded image
+        analysis:
+          $ref: '#/components/schemas/ProductAnalysis'
+        preferences:
+          $ref: '#/components/schemas/GenerationPreferences'
+        results:
+          $ref: '#/components/schemas/GeneratedAssets'
+        progress:
+          type: object
+          properties:
+            stage:
+              type: string
+              enum: [uploading, analyzing, generating-content, generating-images, finalizing]
+            percentage:
+              type: integer
+              minimum: 0
+              maximum: 100
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+
+    GeneratedAssets:
+      type: object
+      properties:
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImageAsset'
+          description: Package design variations
+        ads:
+          type: object
+          properties:
+            facebook:
+              $ref: '#/components/schemas/ImageAsset'
+            instagram:
+              $ref: '#/components/schemas/ImageAsset'
+            googleAds:
+              $ref: '#/components/schemas/ImageAsset'
+        content:
+          type: object
+          properties:
+            ecDescription:
+              type: object
+              properties:
+                short:
+                  type: string
+                  maxLength: 150
+                medium:
+                  type: string
+                  maxLength: 500
+                long:
+                  type: string
+                  maxLength: 1000
+            socialMedia:
+              type: object
+              properties:
+                facebook:
+                  type: string
+                instagram:
+                  type: string
+                linkedin:
+                  type: string
+                tiktok:
+                  type: string
+            adCopy:
+              type: object
+              properties:
+                googleAdsHeadline:
+                  type: string
+                  maxLength: 30
+                googleAdsDescription:
+                  type: string
+                  maxLength: 90
+                facebookAd:
+                  type: string
+                  maxLength: 125
+            seo:
+              type: object
+              properties:
+                primaryKeywords:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 5
+                  maxItems: 7
+                longTailKeywords:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 10
+                  maxItems: 15
+                hashtags:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 10
+                  maxItems: 15
+
+    ImageAsset:
+      type: object
+      properties:
+        assetId:
+          type: string
+        url:
+          type: string
+          format: uri
+          description: CDN URL
+        thumbnailUrl:
+          type: string
+          format: uri
+        width:
+          type: integer
+        height:
+          type: integer
+        format:
+          type: string
+          enum: [png, jpg, webp]
+        size:
+          type: integer
+          description: File size in bytes
+        metadata:
+          type: object
+          properties:
+            style:
+              type: string
+            variant:
+              type: string
+            generatedAt:
+              type: string
+              format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+            requestId:
+              type: string
+              description: Unique request ID for support
+
+  responses:
+    BadRequestError:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: INVALID_REQUEST
+              message: Invalid file format. Supported formats: JPEG, PNG, WebP
+              requestId: req_abc123
+
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Valid authentication token required
+              requestId: req_abc123
+
+    PaymentRequiredError:
+      description: Quota exceeded or payment required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: QUOTA_EXCEEDED
+              message: Monthly generation quota exceeded. Upgrade to Pro plan.
+              details:
+                currentPlan: free
+                quotaLimit: 10
+                quotaUsed: 10
+                resetDate: '2025-01-01T00:00:00Z'
+              requestId: req_abc123
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: NOT_FOUND
+              message: Job not found
+              requestId: req_abc123
+
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Request validation failed
+              details:
+                fileSize: File size exceeds maximum of 10MB
+                contentType: Invalid content type
+              requestId: req_abc123
+
+    RateLimitError:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Too many requests. Please try again in 60 seconds.
+              details:
+                retryAfter: 60
+                limit: 10
+                window: 60
+              requestId: req_abc123
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until rate limit resets
+
+  examples:
+    CompleteJobResponse:
+      value:
+        jobId: job_abc123def456
+        userId: user_xyz789
+        status: completed
+        originalImage: https://cdn.genie.ai/uploads/user_xyz789/original.jpg
+        analysis:
+          product:
+            category: beverage
+            subcategory: energy-drink
+          visual:
+            dominantColors:
+              - hex: '#FF6B35'
+                name: coral-orange
+                percentage: 45
+            style: modern-energetic
+        results:
+          packages:
+            - assetId: pkg_001
+              url: https://cdn.genie.ai/generated/job_abc123/package-modern.png
+              width: 1080
+              height: 1080
+          content:
+            ecDescription:
+              short: Energize Your Day - Premium Natural Energy Drink
+              medium: Experience sustained energy with our organic blend...
+        createdAt: '2025-12-13T10:30:00Z'
+        completedAt: '2025-12-13T10:30:45Z'

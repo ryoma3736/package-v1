@@ -1,0 +1,36 @@
+{
+  "name": "package-v1",
+  "version": "0.1.0",
+  "description": "Autonomous development powered by Agentic OS",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "agentic-os",
+    "autonomous"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "canvas": "^3.2.0",
+    "colorthief": "^2.6.0",
+    "node-vibrant": "^4.0.3",
+    "openai": "^6.10.0",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Facebook Feed",
+  "platform": "facebook-feed",
+  "size": {
+    "width": 1200,
+    "height": 630
+  },
+  "layout": {
+    "template": "simple",
+    "padding": 30,
+    "backgroundColor": "#F5F5F5"
+  },
+  "textOverlays": [
+    {
+      "text": "{{headline}}",
+      "position": "top",
+      "fontSize": 64,
+      "fontFamily": "Arial, sans-serif",
+      "color": "#FFFFFF",
+      "backgroundColor": "rgba(59, 89, 152, 0.8)",
+      "padding": 25
+    },
+    {
+      "text": "{{callToAction}}",
+      "position": "bottom-right",
+      "fontSize": 32,
+      "fontFamily": "Arial, sans-serif",
+      "color": "#FFFFFF",
+      "backgroundColor": "rgba(66, 103, 178, 0.9)",
+      "padding": 15
+    }
+  ],
+  "recommendedStyles": ["realistic", "vibrant"],
+  "description": "Optimized for Facebook news feed link previews"
+}
